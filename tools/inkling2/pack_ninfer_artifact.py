@@ -23,6 +23,15 @@ import json
 from pathlib import Path
 import sys
 
+# In direct-script mode sys.path[0] is tools/inkling2, not the worktree root.
+# In -m mode sys.path[0] is the worktree root, not tools/inkling2.
+# This CLI intentionally supports BOTH, without a user-set PYTHONPATH.
+_THIS_DIR = Path(__file__).resolve().parent
+_ROOT = _THIS_DIR.parents[1]
+for _location in (_ROOT, _THIS_DIR):
+    if str(_location) not in sys.path:
+        sys.path.insert(0, str(_location))
+
 from check_checkpoint import validate_config, validate_header, validate_index
 from native_experts import MiniGeometry, format_for_layer, FMT_NVFP4, parse_selection
 from export_experts import expected_bank_size
