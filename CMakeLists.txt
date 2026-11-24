@@ -11,6 +11,7 @@ option(NINFER_BUILD_APPS "Build the NInfer CLI, server and perplexity evaluator"
 option(BUILD_TESTING "Build NInfer tests" OFF)
 option(NINFER_BUILD_BENCHMARKS "Build NInfer benchmarks" OFF)
 option(NINFER_ENABLE_DISTRIBUTED "Build distributed execution and NCCL communication" OFF)
+option(NINFER_BUILD_INKLING2_CONTRACT "Build Inkling2 Mini config/loop contract only (no inference)" OFF)
 
 if(NINFER_BUILD_APPS AND NOT NINFER_BUILD_ENGINE)
   message(FATAL_ERROR "NINFER_BUILD_APPS requires NINFER_BUILD_ENGINE")

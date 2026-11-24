@@ -9,6 +9,11 @@ add_library(ninfer_model_loading STATIC
   common/weights.cpp
   common/moe/weights.cpp)
 ninfer_internal_includes(ninfer_model_loading)
+if(NINFER_BUILD_INKLING2_CONTRACT)
+  target_sources(ninfer_model_loading PRIVATE
+    inkling2/config.cpp
+    inkling2/plan.cpp)
+endif()
 target_link_libraries(ninfer_model_loading PUBLIC ninfer_artifact ninfer_text ninfer_ops ninfer_deployment)
 if(NINFER_BUILD_MODEL_GLM5NEXT)
   target_sources(ninfer_model_loading PRIVATE

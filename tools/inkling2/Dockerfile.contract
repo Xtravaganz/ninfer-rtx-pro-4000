@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+# Test-only image. Inkling runtime / model weights are intentionally not built.
+FROM nvidia/cuda:13.1.2-devel-ubuntu24.04
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+    cmake ninja-build pkg-config python3 \
+    libavcodec-dev libavformat-dev libavutil-dev \
+    libcurl4-openssl-dev libhwloc-dev libjpeg-dev libswscale-dev liburing-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Link against toolkit stub during build without a host driver.
+RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so \
+          /usr/local/cuda/lib64/libcuda.so.1
+WORKDIR /src
+COPY . .
+RUN cmake -S . -B /build -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DNINFER_TARGET=rtx5090 \
+      -DNINFER_MODEL_FAMILIES=qwen3_5 \
+      -DNINFER_BUILD_APPS=OFF \
+      -DNINFER_BUILD_INKLING2_CONTRACT=ON \
+      -DBUILD_TESTING=ON \
+      -DNINFER_BUILD_BENCHMARKS=OFF \
+    && cmake --build /build --parallel 8 --target ninfer_inkling2_contract_test
+
+# Never ship the build stub into a runnable image. The real driver comes from
+# the NVIDIA container runtime when --gpus is enabled.
+RUN rm -f /usr/local/cuda/lib64/libcuda.so.1 \
+    /usr/local/cuda/targets/x86_64-linux/lib/libcuda.so.1
+ENV LD_LIBRARY_PATH=/lib/x86_64-linux-gnu:/usr/local/cuda/lib64:/build/lib
+ENTRYPOINT ["/build/tests/ninfer_inkling2_contract_test"]
