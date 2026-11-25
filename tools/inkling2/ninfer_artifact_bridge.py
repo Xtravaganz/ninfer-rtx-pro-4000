@@ -160,6 +160,18 @@ def unswizzle_nvfp4_128_rows(scales: bytes, cols: int) -> bytes:
     if cols <= 0 or cols % 64 or len(scales) != 128 * cols // 16:
         raise ValueError("NVFP4 unswizzle requires a complete 128-row tile")
     stride = cols // 16
+    # Stage 6D: exact array transpose replacing ~4,600 Python slice copies
+    # per 128-row tile at K=2304. NumPy is optional: the original
+    # dependency-free conversion remains valid on a bare host.
+    try:
+        import numpy as np
+    except ImportError:
+        pass
+    else:
+        return (np.frombuffer(scales, dtype=np.uint8)
+                .reshape(cols // 64, 32, 4, 4)
+                .transpose(2, 1, 0, 3)
+                .tobytes())
     out = bytearray(len(scales))
     cursor = 0
     for k_tile in range(cols // 64):
