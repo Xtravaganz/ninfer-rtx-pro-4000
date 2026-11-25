@@ -1,0 +1,9 @@
+# Optional heavy-weight official HF parity image. Not needed for Stage5Q tests.
+# Build: docker build -f tools/inkling2/Dockerfile.stage5p_hf \
+#        -t ninfer:inkling2-hf-stage5p tools/inkling2
+FROM pytorch/pytorch:2.14.0-cuda13.0-cudnn9-runtime
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+ARG TRANSFORMERS_REF=main
+RUN python -m pip install --break-system-packages --no-cache-dir \
+    "git+https://github.com/huggingface/transformers.git@${TRANSFORMERS_REF}" \
+    accelerate safetensors huggingface_hub
